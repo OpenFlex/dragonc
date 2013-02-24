@@ -54,8 +54,8 @@ TokenType Lexer::getToken()
 		while(isdigit(c = mSourceStream->get())) {
 			value += c;
 		}
+		mCurrentTokenValue = value;
 		if(c != '.') {
-			mCurrentTokenValue = value;
 			return INTEGER;
 		}
 		return INTEGER;

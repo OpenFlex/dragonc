@@ -1,6 +1,11 @@
 #include "DragonParser.h"
-#include "Function.h"
+#include "AssignmentExpression.h"
+#include "IntegerValueExpr.h"
+#include "AddExpression.h"
+#include "VariableExpression.h"
 #include <iostream>
+#include <map>
+#include <cstdlib>
 using namespace std;
 namespace Dragonc
 {
@@ -10,83 +15,92 @@ Parser::Parser(Lexer *dragonLexer)
 	mLexer = dragonLexer;
 }
 
-BaseExpression *Parser::parse()
+Parser::~Parser()
 {
-	switch (mLexer->getToken()) {
-		case TYPE:
-			return handleTypeDecl();
-			break;
-		default:
-			return NULL;
-			
+	int size = mExprList.size();
+	for(int i = 0; i < size; i++) {
+		delete mExprList[i];
 	}
-	return NULL;
 }
 
-BaseExpression *Parser::handleTypeDecl()
+
+BaseExpression* Parser::getIdent(string name)
+{
+	return new VariableExpression(mSymbolTable[name]);
+}
+
+void Parser::emitCode(IRBuilder<> &builder, Module &module)
+{
+	int size = mExprList.size();
+    for (int i = 0; i < size; i++) {
+		if(mExprList[i] != NULL)
+        mExprList[i]->emitCode(builder, module);
+    }
+}
+
+void Parser::parse()
+{
+	TokenType token;
+    do {
+		token = mLexer->getToken();
+        switch (token) {
+        case IDENTIFIER:
+            handleIdentifierDeclaration();
+            break;
+        default:
+            break;
+        }
+    } while (token != TOKEN_EOF);
+}
+
+
+void Parser::handleIdentifierDeclaration()
+{
+	string name = mLexer->getCurrentTokenValue();
+	string initValue;
+	if(mSymbolTable.find(name) == mSymbolTable.end()) 
+	{
+			IdentifierDeclaration *decl = new IdentifierDeclaration(name);
+			mExprList.push_back(decl);
+			mSymbolTable[name] = decl;
+			
+	}
+    while (mLexer->getCurrentTokenValue() != ";") {
+        switch (mLexer->getToken()) {
+        case SPECIAL_SYMBOL:
+            string symbol = mLexer->getCurrentTokenValue();
+            if (symbol == "=") {
+				mExprList.push_back(handleBinaryOp(mSymbolTable[name], symbol));
+            }
+            break;
+        }
+    }
+}
+
+BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, string symbol)
 {
 	BaseExpression *expr = NULL;
-	
-	string value = mLexer->getCurrentTokenValue();
-	cout << value << endl;
-	
-	string identifierName;
-	bool valid = true;
-	while (valid) {
-		switch (mLexer->getToken()) {
-			case IDENTIFIER:
-				identifierName = mLexer->getCurrentTokenValue();
-				cout << identifierName << endl;
-				break;
-			case FUNCTION_DECL:
-				identifierName = mLexer->getCurrentTokenValue();
-				cout << identifierName << endl;
-				return parseFunctionPrototype(value, identifierName);
-				break;
-		}
-	}
-	return expr;
-}
-
-BaseExpression *Parser::parseFunctionPrototype(string returnValue, string name)
-{
-	map<string, string> arguments;
-	bool finishedParsing = false;
-	bool error = false;
-	string typeName;
-	BaseExpression *functionBody;
-	while(!finishedParsing) {
-		switch (mLexer->getToken()) {
-			case TYPE:
-				typeName = mLexer->getCurrentTokenValue();
-				break;
-			case IDENTIFIER:
-				arguments[typeName] = mLexer->getCurrentTokenValue();
-				break;
-			case SPECIAL_SYMBOL:
-				string symbol = mLexer->getCurrentTokenValue();
-				if(symbol == ",") {
-					continue;
-				} else if(symbol == ")") {
-					continue;
-				} else if(symbol == "{") {
-					functionBody = NULL;	
-				} else if(symbol == "}") {
-					finishedParsing = true;
-				} else {
-					finishedParsing = true;
-					error = true;
-				}
-				break;				
-			
-		}
+	switch(mLexer->getToken()) {
+		case INTEGER:
+			expr = new IntegerValueExpr(atoi(mLexer->getCurrentTokenValue().c_str()));
+			break;
+		case IDENTIFIER:
+			expr = new VariableExpression(mSymbolTable[mLexer->getCurrentTokenValue()]);
+			break;
 	}
 	
+ 	mLexer->getToken();
+     if (mLexer->getCurrentTokenValue() == "+") {
+         expr = handleBinaryOp(expr, mLexer->getCurrentTokenValue());
+     }
 	
-	return new Dragonc::Function(name, returnValue, arguments); 
+ 	if(symbol == "=") {
+ 		return new AssignmentExpression(lhs, expr);
+ 	}
+  	else if (symbol == "+") {
+ 		return new AddExpression(lhs, expr);
+ 	}
 }
-
-
 
 
 }

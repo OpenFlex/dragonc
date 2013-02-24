@@ -1,7 +1,8 @@
 #ifndef DRAGONBASEEXPRESSION_H
 #define DRAGONBASEEXPRESSION_H
 #include <llvm/DerivedTypes.h>
-
+#include <llvm/IRBuilder.h>
+#include <llvm/Module.h>
 using namespace llvm;
 
 namespace Dragonc
@@ -10,10 +11,10 @@ namespace Dragonc
 class BaseExpression
 {
 public:
-	virtual Value *emitCode() = 0;
+	BaseExpression() {};
+	virtual Value *emitCode(IRBuilder<> &builder, Module &module) = 0;
 	virtual ~BaseExpression() {}
-	virtual void print() {}
-	
+	virtual Value *getValue() { return NULL; }
 };
 
 }
