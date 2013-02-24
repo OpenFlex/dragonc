@@ -48,6 +48,8 @@ int main(int argc, char *argv[]) {
 
     builder.CreateRetVoid();
     module->dump();
+	
+	delete module;
 
     return EXIT_SUCCESS;
 }

@@ -89,7 +89,7 @@ BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, string symbol)
 			break;
 	}
 	
- 	mLexer->getToken();
+ 	 mLexer->getToken();
      if (mLexer->getCurrentTokenValue() == "+") {
          expr = handleBinaryOp(expr, mLexer->getCurrentTokenValue());
      }
