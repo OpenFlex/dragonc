@@ -1,8 +1,3 @@
-int main()
-{
-    int a = 3;
-    int b = 4;
-    int c = a + b;
-    printf(c);
-    return 0;
-}
+a = 5;
+b = 6;
+c = a + b +  4;

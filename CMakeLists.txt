@@ -1,14 +1,23 @@
 project(dragonc)
 cmake_minimum_required(VERSION 2.6)
 
-execute_process(COMMAND llvm-config --cppflags
+
+
+find_program(LLVM_CONFIG NAMES  llvm-config llvm-config-3.1 /usr/bin)
+
+
+if(NOT EXISTS ${LLVM_CONFIG})
+        message(FATAL_ERROR ${LLVM_CONFIG})
+endif()
+
+execute_process(COMMAND ${LLVM_CONFIG} --cppflags
                 OUTPUT_VARIABLE LLVM_FLAGS)
 
-execute_process(COMMAND llvm-config --ldflags
+execute_process(COMMAND ${LLVM_CONFIG} --ldflags
                 OUTPUT_STRIP_TRAILING_WHITESPACE      
                 OUTPUT_VARIABLE LLVM_LD_FLAGS)
 
-execute_process(COMMAND llvm-config --libs core
+execute_process(COMMAND ${LLVM_CONFIG} --libs 
                 OUTPUT_STRIP_TRAILING_WHITESPACE      
                 OUTPUT_VARIABLE LLVM_LIBS)
 
