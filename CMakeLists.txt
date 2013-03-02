@@ -36,4 +36,4 @@ file(GLOB INCLUDE_LIST "${PROJECT_SOURCE_DIR}/include/*.h")
 include_directories("${PROJECT_SOURCE_DIR}/include/")
 
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${INCLUDE_LIST})
-target_link_libraries(${PROJECT_NAME} ${LLVM_LD_FLAGS} ${LLVM_LIBS})
+target_link_libraries(${PROJECT_NAME} ${LLVM_LD_FLAGS} ${LLVM_LIBS} -lpthread -ldl)

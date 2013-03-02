@@ -1,6 +1,8 @@
 #include "DragonLexer.h"
 #include <llvm/ADT/StringSwitch.h>
 
+#include <stdio.h>
+
 using namespace llvm;
 using namespace std;
 namespace Dragonc 
@@ -17,60 +19,90 @@ Lexer::~Lexer()
 	delete mSourceStream;
 }
 
-TokenType Lexer::getToken()
+LexerToken Lexer::getToken()
 {
-	string value;
-	static char c = ' ';
-	
-	if(!mSourceStream->good() || c == EOF)
-		return TOKEN_EOF;
-	
+	LexerToken lexerToken;
+	static char c = mSourceStream->get();
+
 	while(isspace(c)) {
 		c =  mSourceStream->get();
 	}
-		
 	
-	if(isalpha(c)) {
-		value += c;
-		while(isalnum(c = mSourceStream->get())) {
-			value += c;
-		}
-		
-		
-		TokenType type = StringSwitch<TokenType>(StringRef(value)).Cases("int", "double", TYPE).Default(INVALID);
-		
-		if(type == TYPE) {
-			mCurrentTokenValue = value;		
-			return type;
-		} else {
-			mCurrentTokenValue = value;
-			if(c == '(')
-				return FUNCTION_DECL;
-			return IDENTIFIER;
-		}
-		
-	} else if(isdigit(c)) {
-		value += c;
-		while(isdigit(c = mSourceStream->get())) {
-			value += c;
-		}
-		mCurrentTokenValue = value;
-		if(c != '.') {
-			return INTEGER;
-		}
-		return INTEGER;
-	} else {
-		value += c;
-		while(isspace(c = mSourceStream->get()));
-		mCurrentTokenValue = value;
-		return SPECIAL_SYMBOL;
+	if(!mSourceStream->good() || c == EOF) {
+		lexerToken.type = TOKEN_EOF;
+		return lexerToken;
 	}
-	return TOKEN_EOF;
+
+	/* Values and types*/
+	if(isalpha(c)) {		
+		lexerToken.value += c;
+		while(isalnum(c = mSourceStream->get())) {
+			lexerToken.value += c;
+		}
+
+		TokenType type = StringSwitch<TokenType>(StringRef(lexerToken.value))
+		.Case("return", KEYWORD)
+		.Cases("int", "double", TYPE)
+		.Default(INVALID);
+
+		if(type == TYPE) {
+			lexerToken.type = type;
+		} else if (type == KEYWORD) {
+			lexerToken.type = type;
+		}else {
+			lexerToken.type = IDENTIFIER;
+		}
+	}
+	/* Numbers */
+	else if(isdigit(c)) {
+		lexerToken.value += c;
+		lexerToken.type = CONST_NUMBER;
+		while(isdigit(c = mSourceStream->get())) {
+			lexerToken.value += c;
+		}
+	}
+	/* Special symbols */
+	else {
+		/* Braces */
+		if(c == '{' || c == '}' || c == '(' || c == ')') {
+			lexerToken.value= c;
+			while(isspace(c = mSourceStream->get()));
+			lexerToken.type = BRACE;
+		}
+		/* End expression symbols */
+		else if(c == ';') {
+			lexerToken.value= c;
+			while(isspace(c = mSourceStream->get()));
+			lexerToken.type = EXPRESSION_END;
+		}
+		/* End expression symbols */
+		else if(c == '+' || c == '-' || c == '*' || c == '/' || c == '=') {
+			lexerToken.value= c;
+			while(isspace(c = mSourceStream->get()));
+			lexerToken.type = BINARY_OP;
+		}
+// 		/* Assignment */
+// 		else if(c == '=') {
+// 			lexerToken.value= c;
+// 			while(isspace(c = mSourceStream->get()));
+// 			lexerToken.type = ASSIGNMENT_OP;
+// 		}
+		/* Everything else */
+		else {
+			lexerToken.value += c;
+			while(isspace(c = mSourceStream->get()));
+			lexerToken.type = SPECIAL_SYMBOL;
+		}
+		
+	}
+
+	
+	return lexerToken;
 }
 
-string Lexer::getCurrentTokenValue()
-{
-	return mCurrentTokenValue;
-}
+// string Lexer::getCurrentTokenValue()
+// {
+// 	return mCurrentTokenValue;
+// }
 
 }

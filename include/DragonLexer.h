@@ -13,16 +13,25 @@ namespace Dragonc
 enum TokenType
 {
 	INVALID = -1,
-	IDENTIFIER,
-	INTEGER,
-	DOUBLE,
-	BIN_OP,
-	TOKEN_EOF,
-	TYPE, 
-	FUNCTION_DECL,
-	SPECIAL_SYMBOL
+	KEYWORD = 'k',
+	EXPRESSION_END = 'x',
+	TYPE = 't',
+	IDENTIFIER = 'i',
+	CONST_NUMBER = 'n',
+	ASSIGNMENT_OP = 'a',
+	BINARY_OP = 'b',
+	BRACE = 'r',
+	TOKEN_EOF = 'e',
+	FUNCTION_DECL = 'f',
+	SPECIAL_SYMBOL = 's',
 };
 
+
+struct LexerToken
+{
+	TokenType type;
+	string value;
+};
 
 class Lexer
 {
@@ -30,9 +39,9 @@ public:
 	Lexer(string sourceFile);
 	virtual ~Lexer();
 	
-	TokenType getToken();
+	LexerToken getToken();
 	
-	string getCurrentTokenValue();
+// 	string getCurrentTokenValue();
 	
 private:
 	ifstream *mSourceStream;
