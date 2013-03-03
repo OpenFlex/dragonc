@@ -4,6 +4,7 @@
 #include <llvm/DerivedTypes.h>
 #include <llvm/IRBuilder.h>
 #include <llvm/Module.h>
+#include <llvm/Instruction.h>
 
 #include <string>
 
@@ -145,6 +146,18 @@ public:
 private:
 	BaseExpression *mIdent;
 };
+
+class PrintfInvocation : public BaseExpression
+{
+public:
+	PrintfInvocation(BaseExpression *identifier):BaseExpression(), mParams(identifier) {};
+	virtual Value *emitCode(IRBuilder< true >& builder, Module &module);
+
+private:
+	// Only single param for now
+	BaseExpression *mParams;
+};
+
 
 
 

@@ -41,7 +41,7 @@ LexerToken Lexer::getToken()
 		}
 
 		TokenType type = StringSwitch<TokenType>(StringRef(lexerToken.value))
-		.Case("return", KEYWORD)
+		.Cases("return", "printf", KEYWORD)
 		.Cases("int", "double", TYPE)
 		.Default(INVALID);
 
