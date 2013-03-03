@@ -10,6 +10,9 @@
 #include "llvm/PassManager.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include <llvm/ExecutionEngine/GenericValue.h>
+#include <llvm/Support/TargetSelect.h>
+#include "llvm/ExecutionEngine/JIT.h"
+
 #include <vector>
 #include <string>
 using namespace llvm;
@@ -42,10 +45,13 @@ printf_prototype(llvm::LLVMContext& ctx, llvm::Module *mod)
 
 int main(int argc, char *argv[]) {
 
+	llvm::InitializeNativeTarget();
+	
 	if (argc < 2) {
 		print_usage(argv[0]);
 		return EXIT_FAILURE;
 	}
+	
 	llvm::LLVMContext &context = llvm::getGlobalContext();
 	llvm::Module *module = new llvm::Module("asdf", context);
 	llvm::IRBuilder<> builder(context);
@@ -67,8 +73,19 @@ int main(int argc, char *argv[]) {
 
 	p.emitCode(builder, *module);
 
-	builder.CreateRetVoid();
+	builder.CreateRet(ConstantInt::get(getGlobalContext(), APInt(32, 0)));
 	module->dump();
+
+	llvm::ExecutionEngine *engine = ExecutionEngine::create(module);
+
+	if(engine) {
+		printf("######### BEGIN \"%s\" OUTPUT #########\n", argv[1]);
+		engine->runFunction(mainFunc, std::vector<llvm::GenericValue>());
+
+		printf("\n######### END OUTPUT #########\n");
+	} else {
+		printf("Failed to initialize the execution engine");
+	}
 	
 	delete module;
 
