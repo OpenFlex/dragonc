@@ -56,5 +56,29 @@ Value* VariableExpression::emitCode(IRBuilder< true >& builder, Module &module)
 	return builder.CreateLoad(mIdent->getValue());
 }
 
+Value *PrintfInvocation::emitCode(IRBuilder< true >& builder, Module &module)
+{
+	Function* printf_proto = module.getFunction("printf");
+
+	llvm::Constant *format_const =
+	llvm::ConstantDataArray::getString(builder.getContext(), "%d\n");
+	llvm::GlobalVariable *var =
+	new llvm::GlobalVariable(module, llvm::ArrayType::get(llvm::IntegerType::get(builder.getContext(), 8), 4),
+					 true, llvm::GlobalValue::PrivateLinkage, format_const, ".str");
+	llvm::Constant *zero =
+	llvm::Constant::getNullValue(llvm::IntegerType::getInt32Ty(builder.getContext()));
+
+	std::vector<llvm::Constant*> indices;
+	indices.push_back(zero);
+	indices.push_back(zero);
+	llvm::Constant *var_ref =
+	llvm::ConstantExpr::getGetElementPtr(var, indices);
+
+	llvm::CallInst *call = builder.CreateCall2(printf_proto, var_ref, mParams->emitCode(builder, module));
+	call->setTailCall(false);
+	
+	return call;
+}
+
 
 }

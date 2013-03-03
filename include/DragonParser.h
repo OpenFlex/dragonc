@@ -44,6 +44,7 @@ private:
 	void handleIdentifierDeclaration();
 	BaseExpression* handleBrace(char value);
 	BaseExpression* handleType(string value);
+	BaseExpression* handleKeyword(string keyword);
 	BaseExpression* handleDeclaration(DragonType type, string value);
 	BaseExpression* handleIdentifier(const LexerToken& currentToken);
 	BaseExpression* handleAssignment();

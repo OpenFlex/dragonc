@@ -48,16 +48,13 @@ void Parser::parse()
 	do {
 		currentToken = mLexer->getToken();
 
-		std::cout << (char)currentToken.type << " " << currentToken.value << '\n';
-		
+		BaseExpression* expr = 0;
 		switch (currentToken.type) {
 			case TYPE:
-				if(BaseExpression* expr = handleType(currentToken.value)) {
-					mExprList.push_back(expr);
-				}
+				expr = handleType(currentToken.value);
 				break;
 			case IDENTIFIER:
-				handleIdentifier(currentToken);
+				expr = handleIdentifier(currentToken);
 				break;
 			case EXPRESSION_END:
 				
@@ -72,11 +69,15 @@ void Parser::parse()
 // 				handleBrace(currentToken.value.c_str()[0]);
 				break;
 			case KEYWORD:
-				
+				expr = handleKeyword(currentToken.value);
 				break;
 			default:
 				break;
 		}
+
+		if(expr) {
+			mExprList.push_back(expr);
+		};
 	} while (currentToken.type != TOKEN_EOF);
 }
 
@@ -127,6 +128,34 @@ BaseExpression* Parser::handleDeclaration(DragonType type, string name)
 	return expr;
 }
 
+BaseExpression* Parser::handleKeyword(string keyword)
+{
+	int type = StringSwitch<int>(StringRef(keyword))
+	.Case("printf", 0)
+	.Case("scanf", 1)
+	.Case("return", 10);
+	BaseExpression *expr;
+	LexerToken token;
+	switch(type)
+	{
+		case 0:
+			token = mLexer->getToken();
+			if(token.value == "(") {
+				expr = new PrintfInvocation(handleIdentifier(mLexer->getToken()));
+			}
+			token = mLexer->getToken();
+
+			if(token.value != ";") {
+				throw "Expected )";
+			}
+			
+			break;
+		default:
+			break;
+	}
+	return expr;
+}
+
 BaseExpression* Parser::handleAssignment()
 {
 // 	LexerToken nextToken = mLexer->getToken();
@@ -162,6 +191,9 @@ BaseExpression* Parser::handleIdentifier(const LexerToken& identifier)
 			expr = handleBinaryOp(new VariableExpression(mSymbolTable[identifier.value]), nextToken.value);
 			break;
 		case BRACE:
+			if(nextToken.value == ")") {
+				expr = new VariableExpression(mSymbolTable[identifier.value]);
+			}
 			break;
 		default:
 			printf("Unexpected %s, expected ';', '=' or '('", identifier.value.c_str());exit(0);
