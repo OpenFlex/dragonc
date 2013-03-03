@@ -14,8 +14,12 @@ execute_process(COMMAND ${LLVM_CONFIG} --cppflags
                 OUTPUT_VARIABLE LLVM_FLAGS)
 
 execute_process(COMMAND ${LLVM_CONFIG} --ldflags
-                OUTPUT_STRIP_TRAILING_WHITESPACE      
+                OUTPUT_STRIP_TRAILING_WHITESPACE
                 OUTPUT_VARIABLE LLVM_LD_FLAGS)
+                
+execute_process(COMMAND ${LLVM_CONFIG} --libs engine jit
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                OUTPUT_VARIABLE LLVM_EXECENGINE_LD_FLAGS)
 
 execute_process(COMMAND ${LLVM_CONFIG} --libs 
                 OUTPUT_STRIP_TRAILING_WHITESPACE      
@@ -36,4 +40,4 @@ file(GLOB INCLUDE_LIST "${PROJECT_SOURCE_DIR}/include/*.h")
 include_directories("${PROJECT_SOURCE_DIR}/include/")
 
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${INCLUDE_LIST})
-target_link_libraries(${PROJECT_NAME} ${LLVM_LD_FLAGS} ${LLVM_LIBS} -lpthread -ldl)
+target_link_libraries(${PROJECT_NAME} ${LLVM_LD_FLAGS} ${LLVM_LIBS} ${LLVM_EXECENGINE_LD_FLAGS} -lpthread -ldl)
