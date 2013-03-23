@@ -35,7 +35,8 @@ void Parser::emitCode(IRBuilder<> &builder, Module &module)
 	int size = mExprList.size();
 	
 	for (int i = 0; i < size; i++) {
-		if(mExprList[i] != NULL)
+		BaseExpression* e = mExprList[i];
+		if(e != NULL)
 			mExprList[i]->emitCode(builder, module);
 	}
 }
@@ -119,13 +120,20 @@ BaseExpression* Parser::handleDeclaration(DragonType type, string name)
 			expr = handleBinaryOp(expr, nextToken.value);
 			break;
 		case BRACE:
-			// function
+			expr = handleFunctionDeclaration(type, name);
+			mSymbolTable[name] = expr;
+			break;
 		default:
-			printf("Unexpected %s, expected ';', '=' or '('", name.c_str());exit(0);
+			printf("Unexpected '%s' after '%s', expected ';', '=' or '('", nextToken.value.c_str(), name.c_str());exit(0);
 			break;
 	}
 
 	return expr;
+}
+
+BaseExpression* Parser::handleFunctionDeclaration(DragonType type, string name)
+{
+	return new FuctionDeclExpr(type, name);
 }
 
 BaseExpression* Parser::handleKeyword(string keyword)
@@ -196,7 +204,7 @@ BaseExpression* Parser::handleIdentifier(const LexerToken& identifier)
 			}
 			break;
 		default:
-			printf("Unexpected %s, expected ';', '=' or '('", identifier.value.c_str());exit(0);
+			printf("Unexpected '%s' after '%s', expected ';', '=' or '('", nextToken.value.c_str(), identifier.value.c_str());exit(0);
 			break;
 	}
 

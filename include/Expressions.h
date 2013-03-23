@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include "DragonTypes.h"
+
 using namespace llvm;
 using namespace std;
 
@@ -133,6 +135,21 @@ public:
 
 private:
 	int mValue;
+};
+
+
+
+class FuctionDeclExpr : public BaseExpression
+{
+public:
+	FuctionDeclExpr(DragonType returnType, string name) : BaseExpression(), mName(name), mReturnType(returnType){} ;
+
+	virtual Value *emitCode(IRBuilder<>& builder, Module &module);
+
+private:
+	
+	string mName;
+	DragonType mReturnType;
 };
 
 

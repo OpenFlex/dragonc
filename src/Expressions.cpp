@@ -56,23 +56,29 @@ Value* VariableExpression::emitCode(IRBuilder< true >& builder, Module &module)
 	return builder.CreateLoad(mIdent->getValue());
 }
 
+Value *FuctionDeclExpr::emitCode(IRBuilder<>& builder, Module &module)
+{
+	llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
+	llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mName, &module);
+	llvm::BasicBlock *entry = llvm::BasicBlock::Create(module.getContext(), "entrypoint", mainFunc);
+	builder.SetInsertPoint(entry);
+	
+	return entry;
+}
+
 Value *PrintfInvocation::emitCode(IRBuilder< true >& builder, Module &module)
 {
 	Function* printf_proto = module.getFunction("printf");
 
-	llvm::Constant *format_const =
-	llvm::ConstantDataArray::getString(builder.getContext(), "%d\n");
-	llvm::GlobalVariable *var =
-	new llvm::GlobalVariable(module, llvm::ArrayType::get(llvm::IntegerType::get(builder.getContext(), 8), 4),
+	llvm::Constant *format_const = llvm::ConstantDataArray::getString(builder.getContext(), "%d\n");
+	llvm::GlobalVariable *var = new llvm::GlobalVariable(module, llvm::ArrayType::get(llvm::IntegerType::get(builder.getContext(), 8), 4),
 					 true, llvm::GlobalValue::PrivateLinkage, format_const, ".str");
-	llvm::Constant *zero =
-	llvm::Constant::getNullValue(llvm::IntegerType::getInt32Ty(builder.getContext()));
+	llvm::Constant *zero = llvm::Constant::getNullValue(llvm::IntegerType::getInt32Ty(builder.getContext()));
 
 	std::vector<llvm::Constant*> indices;
 	indices.push_back(zero);
 	indices.push_back(zero);
-	llvm::Constant *var_ref =
-	llvm::ConstantExpr::getGetElementPtr(var, indices);
+	llvm::Constant *var_ref = llvm::ConstantExpr::getGetElementPtr(var, indices);
 
 	llvm::CallInst *call = builder.CreateCall2(printf_proto, var_ref, mParams->emitCode(builder, module));
 	call->setTailCall(false);
