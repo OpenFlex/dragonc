@@ -3,6 +3,7 @@
 
 #include "DragonLexer.h"
 #include "Expressions.h"
+#include "DragonTypes.h"
 
 #include <map>
 #include <vector>
@@ -19,14 +20,6 @@ enum ParserContext
 	R_EXPRESSION,
 	FUNCTION_PARAMETERS_BLOCK,
 	FUNCTION_BODY,
-};
-
-enum DragonType
-{
-	TYPE_NONE,
-	TYPE_VOID,
-	TYPE_INTEGER,
-	TYPE_DOUBLE,
 };
 
 class Parser
@@ -49,6 +42,7 @@ private:
 	BaseExpression* handleIdentifier(const LexerToken& currentToken);
 	BaseExpression* handleAssignment();
 	BaseExpression* handleBinaryOp(BaseExpression *lhs, string symbol);
+	BaseExpression* handleFunctionDeclaration(DragonType type, string name);
 
 private:
 	Lexer *mLexer;
@@ -59,7 +53,7 @@ private:
 	ParserContext mCurrentContext;
 	DragonType mCurrentType;
 	LexerToken mCurrentIdentifier;
-	
+
 	void clearState()
 	{
 		mCurrentContext = GLOBAL;
@@ -67,6 +61,7 @@ private:
 		mCurrentIdentifier.type = INVALID;
 		mCurrentIdentifier.value = "";
 	}
+
 };
 
 }

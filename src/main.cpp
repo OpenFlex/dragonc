@@ -58,10 +58,10 @@ int main(int argc, char *argv[]) {
 
 	llvm::Function *printf_func = printf_prototype(context, module);
 
-	llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getVoidTy(), false);
-	llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
-	llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "entrypoint", mainFunc);
-	builder.SetInsertPoint(entry);
+// 	llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
+// 	llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
+// 	llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "entrypoint", mainFunc);
+// 	builder.SetInsertPoint(entry);
 
 	Lexer lexer(argv[1]);
 
@@ -73,20 +73,28 @@ int main(int argc, char *argv[]) {
 
 	p.emitCode(builder, *module);
 
-	builder.CreateRet(ConstantInt::get(getGlobalContext(), APInt(32, 0)));
+	builder.CreateRet(ConstantInt::get(getGlobalContext(), APInt(32, 5)));
 	module->dump();
 
 	llvm::ExecutionEngine *engine = ExecutionEngine::create(module);
 
 	if(engine) {
-		printf("######### BEGIN \"%s\" OUTPUT #########\n", argv[1]);
-		engine->runFunction(mainFunc, std::vector<llvm::GenericValue>());
+		Function* mainFunction = module->getFunction("main");
+		if(!mainFunction)
+		{
+			printf("No main function");
+		}
+		else
+		{
+			printf("######### BEGIN \"%s\" OUTPUT #########\n", argv[1]);
+			engine->runFunction(mainFunction, std::vector<llvm::GenericValue>());
 
-		printf("\n######### END OUTPUT #########\n");
+			printf("\n######### END OUTPUT #########\n");
+		}
 	} else {
 		printf("Failed to initialize the execution engine");
 	}
-	
+
 	delete module;
 
 	return EXIT_SUCCESS;
