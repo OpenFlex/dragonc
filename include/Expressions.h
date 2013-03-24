@@ -139,17 +139,19 @@ private:
 
 
 
-class FuctionDeclExpr : public BaseExpression
+class FunctionDeclExpr : public BaseExpression
 {
 public:
-	FuctionDeclExpr(DragonType returnType, string name) : BaseExpression(), mName(name), mReturnType(returnType){} ;
+    FunctionDeclExpr(DragonType returnType, string name, VariableList& variableList);
+    virtual ~FunctionDeclExpr(){}
 
 	virtual Value *emitCode(IRBuilder<>& builder, Module &module);
 
 private:
 	
 	string mName;
-	DragonType mReturnType;
+    DragonType mReturnType;
+//    VariableList* mVariableList;
 };
 
 

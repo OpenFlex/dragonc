@@ -6,6 +6,8 @@
 #include <iostream>
 #include <map>
 #include <cstdlib>
+#include <list>
+
 
 using namespace std;
 namespace Dragonc
@@ -84,9 +86,7 @@ void Parser::parse()
 
 BaseExpression* Parser::handleType(string type_name)
 {
-	DragonType type = StringSwitch<DragonType>(StringRef(type_name))
-	.Case("int", TYPE_INTEGER)
-	.Case("double", TYPE_DOUBLE);
+	DragonType type = toDragonType(type_name);
 	
 	LexerToken identifier = mLexer->getToken();
 	BaseExpression* expr = 0;
@@ -120,8 +120,15 @@ BaseExpression* Parser::handleDeclaration(DragonType type, string name)
 			expr = handleBinaryOp(expr, nextToken.value);
 			break;
 		case BRACE:
-			expr = handleFunctionDeclaration(type, name);
-			mSymbolTable[name] = expr;
+			if(nextToken.value[0] == '(')
+			{
+				expr = handleFunctionDeclaration(type, name);
+				mSymbolTable[name] = expr;
+			}
+			else
+			{
+				printf("Unexpected '%s' after '%s', expected '('", nextToken.value.c_str(), name.c_str());exit(0);
+			}
 			break;
 		default:
 			printf("Unexpected '%s' after '%s', expected ';', '=' or '('", nextToken.value.c_str(), name.c_str());exit(0);
@@ -131,9 +138,43 @@ BaseExpression* Parser::handleDeclaration(DragonType type, string name)
 	return expr;
 }
 
+VariableList args;
 BaseExpression* Parser::handleFunctionDeclaration(DragonType type, string name)
 {
-	return new FuctionDeclExpr(type, name);
+    LexerToken nextToken;
+//    DragonVariable argument = {TYPE_NONE, ""};
+
+    while(nextToken.value[0] != ')')
+    {
+        nextToken = mLexer->getToken();
+//        switch (nextToken.type)
+//        {
+//        case TYPE:
+//            argument.type = toDragonType(nextToken.value);
+//            break;
+//        case IDENTIFIER:
+//            if(argument.type != TYPE_NONE)
+//            {
+//                argument.name = nextToken.value;
+////                args.push_back(argument);
+//                argument.type = TYPE_NONE;
+//            }
+//            else
+//            {
+//                printf("No type specified '%s' in argument list for function '%s'", argument.name.c_str(), name.c_str());exit(0);
+//            }
+//            break;
+//        case BRACE:
+//        case SPECIAL_SYMBOL:
+//            break;
+//        default:
+//            printf("Unexpected '%s' in argument list for function '%s',"
+//                               " expected ','", nextToken.value.c_str(), name.c_str());exit(0);
+//            break;
+//        }
+    }
+
+    return new FunctionDeclExpr(type, name, args);
 }
 
 BaseExpression* Parser::handleKeyword(string keyword)
