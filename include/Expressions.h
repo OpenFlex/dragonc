@@ -115,7 +115,7 @@ class IdentifierDeclaration : public BaseExpression
 {
 public:
 	IdentifierDeclaration(string& name)
-	:BaseExpression(), mName(name) {};
+	:BaseExpression(), mName(name), mValue(0) {};
 
 	virtual Value *emitCode(IRBuilder<> &builder, Module &module);
 	virtual Value *getValue() { return mValue; };
