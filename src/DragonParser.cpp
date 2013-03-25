@@ -14,6 +14,11 @@ namespace Dragonc
 Parser::Parser(Lexer *dragonLexer)
 {
 	mLexer = dragonLexer;
+	mOperatorPrecedence["="] = 0;
+	mOperatorPrecedence["+"] = 1;
+	mOperatorPrecedence["-"] = 1;
+	mOperatorPrecedence["*"] = 2;
+	mOperatorPrecedence["/"] = 2;
 }
 
 Parser::~Parser()
@@ -107,6 +112,7 @@ BaseExpression* Parser::handleDeclaration(DragonType type, string name)
 {
 	LexerToken nextToken = mLexer->getToken();
 	BaseExpression* expr = 0;
+	mCurrentToken = nextToken;
 
 	switch (nextToken.type) {
 		case EXPRESSION_END:
@@ -117,7 +123,7 @@ BaseExpression* Parser::handleDeclaration(DragonType type, string name)
 		case BINARY_OP:
 			expr = new IdentifierDeclaration(name);
 			mSymbolTable[name] = expr;
-			expr = handleBinaryOp(expr, nextToken.value);
+			expr = handleBinaryOp(expr);
 			break;
 		case BRACE:
 			expr = handleFunctionDeclaration(type, name);
@@ -190,13 +196,13 @@ BaseExpression* Parser::handleIdentifier(const LexerToken& identifier)
 {
 	LexerToken nextToken = mLexer->getToken();
 	BaseExpression* expr = 0;
-
+	mCurrentToken = nextToken;
 	switch (nextToken.type) {
 		case EXPRESSION_END:
 			expr = new VariableExpression(mSymbolTable[identifier.value]);
 			break;
 		case BINARY_OP:
-			expr = handleBinaryOp(new VariableExpression(mSymbolTable[identifier.value]), nextToken.value);
+			expr = handleBinaryOp(new VariableExpression(mSymbolTable[identifier.value]));
 			break;
 		case BRACE:
 			if(nextToken.value == ")") {
@@ -260,11 +266,48 @@ void Parser::handleIdentifierDeclaration()
 // 	}
 }
 
-BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, string symbol)
+BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, int precedence)
 {
+	LexerToken currentToken;
+	while (1) {
+		int opPrecedence = mOperatorPrecedence[mCurrentToken.value];
+		
+		
+		if (opPrecedence < precedence || mCurrentToken.type != BINARY_OP)
+			return lhs;
+		
+		currentToken = mCurrentToken;
+		
+		BaseExpression *rhs = handleOperand();
+		mCurrentToken = mLexer->getToken();
+		int nextOp =  mOperatorPrecedence[mCurrentToken.value];
+		
+		if (opPrecedence < nextOp)
+			rhs = handleBinaryOp(rhs, opPrecedence + 1);
+		
+		if (currentToken.value == "=") {
+			lhs = new AssignmentExpression(lhs, rhs);
+		} else if (currentToken.value == "+") {
+			lhs = new AddExpression(lhs, rhs);
+		} else if (currentToken.value == "-") {
+			lhs = new SubstractExpression(lhs, rhs);
+		} else if (currentToken.value == "*") {
+			lhs = new MultiplyExpression(lhs, rhs);
+		} else if (currentToken.value == "/") {
+			lhs = new DivideExpression(lhs, rhs);
+		} else {
+			throw "unhandled sitation";
+		}
+		
+	}
+}
+
+BaseExpression* Parser::handleOperand() 
+{
+	
 	LexerToken currentToken = mLexer->getToken();
 	BaseExpression *expr = NULL;
-
+	
 	switch(currentToken.type) {
 		case CONST_NUMBER:
 			expr = new IntegerValueExpr(atoi(currentToken.value.c_str()));
@@ -272,31 +315,14 @@ BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, string symbol)
 		case IDENTIFIER:
 			expr = new VariableExpression(mSymbolTable[currentToken.value]);
 			break;
-	}
-
-	currentToken = mLexer->getToken();
-	if (currentToken.type == BINARY_OP) {
-		expr = handleBinaryOp(expr, currentToken.value);
+		case BRACE:
+			expr = handleOperand();
+			mCurrentToken = mLexer->getToken();
+			expr = handleBinaryOp(expr);
+			break;
 	}
 	
-	if(symbol == "=") {
-		return new AssignmentExpression(lhs, expr);
-	}
-	else if (symbol == "+") {
-		return new AddExpression(lhs, expr);
-	}
-	else if (symbol == "-") {
-		return new SubstractExpression(lhs, expr);
-	}
-	else if (symbol == "*") {
-		return new MultiplyExpression(lhs, expr);
-	}
-	else if (symbol == "/") {
-		return new DivideExpression(lhs, expr);
-	}
-	else {
-		throw "unhandled sitation";
-	}
+	return expr;
 }
 
 
