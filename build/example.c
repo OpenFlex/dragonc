@@ -1,17 +1,15 @@
 
-double asd(int a, double b)
+double asd(int b)
 {
-    int d__r = 3;
-	int a = 4 - d__r;
-	printf(d__r);
-	printf(a);
+//	int d__r = b + 3;
+	//	int a = 4 - d__r;
+	//	printf(b);
+	//	printf(a);
 }
 
-int main()
+int main(int c)
 {
-	int d__r = 3;
-	int a = 4 /d__r;
+	int d__r = c + 3;
 	printf(d__r);
-	printf(a);
 }
 
