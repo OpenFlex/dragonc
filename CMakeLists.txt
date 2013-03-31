@@ -25,7 +25,7 @@ execute_process(COMMAND ${LLVM_CONFIG} --libs
                 OUTPUT_STRIP_TRAILING_WHITESPACE      
                 OUTPUT_VARIABLE LLVM_LIBS)
 
-set(CMAKE_C_COMPILER clang) 
+set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_LINKER llvm-link)
 add_definitions("${LLVM_FLAGS}")

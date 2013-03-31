@@ -87,9 +87,21 @@ int main(int argc, char *argv[]) {
 		else
 		{
 			printf("######### BEGIN \"%s\" OUTPUT #########\n", argv[1]);
-			engine->runFunction(mainFunction, std::vector<llvm::GenericValue>());
 
-			printf("\n######### END OUTPUT #########\n");
+			std::vector<llvm::GenericValue> args;
+			GenericValue val;
+			val.IntVal = APInt(32, 6);
+			args.push_back(val);
+			GenericValue ret = engine->runFunction(mainFunction, args);
+
+//			Function* asdFunction = module->getFunction("asd");
+//			std::vector<llvm::GenericValue> args;
+//			GenericValue val;
+//			val.IntVal = 5;
+//			args.push_back(val);
+//			engine->runFunction(asdFunction, args);
+
+			printf("\nexited with code \n");
 		}
 	} else {
 		printf("Failed to initialize the execution engine");
