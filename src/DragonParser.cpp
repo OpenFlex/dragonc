@@ -304,8 +304,12 @@ BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, int precedence)
 		int opPrecedence = mOperatorPrecedence[mCurrentToken.value];
 		
 		
-		if (opPrecedence < precedence || mCurrentToken.type != BINARY_OP)
+		if (opPrecedence < precedence || mCurrentToken.type == EXPRESSION_END)
 			return lhs;
+		else if(mCurrentToken.type != BINARY_OP)
+		{
+			printf("Expected end of expression, got %s", mCurrentToken.value.c_str());exit(1);
+		}
 		
 		currentToken = mCurrentToken;
 		
@@ -330,26 +334,38 @@ BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, int precedence)
 			throw "unhandled sitation";
 		}
 		
+
+		
 	}
+	return lhs;
 }
 
 BaseExpression* Parser::handleOperand() 
 {
 	
-	LexerToken currentToken = mLexer->getToken();
+	mCurrentToken = mLexer->getToken();
 	BaseExpression *expr = NULL;
 	
-	switch(currentToken.type) {
+	switch(mCurrentToken.type) {
 		case CONST_NUMBER:
-			expr = new IntegerValueExpression(atoi(currentToken.value.c_str()));
+			expr = new IntegerValueExpression(atoi(mCurrentToken.value.c_str()));
 			break;
 		case IDENTIFIER:
-			expr = new UseVariableExpression(currentToken.value);
+			expr = new UseVariableExpression(mCurrentToken.value);
 			break;
 		case BRACE:
-			expr = handleOperand();
-			mCurrentToken = mLexer->getToken();
-			expr = handleBinaryOp(expr);
+			if(mCurrentToken.value == "(") {
+				expr = handleOperand();
+				mCurrentToken = mLexer->getToken();
+				expr = handleBinaryOp(expr);
+				if(mCurrentToken.value != ")") {
+					printf("Expected end of expression");
+					exit(1);
+				}
+				break;
+			}
+		default:
+			printf("expected identifier or constant, got %s", mCurrentToken.value.c_str());exit(1);
 			break;
 	}
 	
