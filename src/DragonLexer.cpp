@@ -80,7 +80,7 @@ LexerToken Lexer::getToken()
 		else if(c == '+' || c == '-' || c == '*' || c == '/' || c == '=') {
 
 			// Single line comments
-			if(c == '/')
+			if(c == '/') 
 			{
 				c = mSourceStream->get();
 				if(c == '/')
@@ -94,9 +94,27 @@ LexerToken Lexer::getToken()
 					mSourceStream->putback(c);
 					c = '/';
 				}
-			}
 			
-			lexerToken.value= c;
+			} else if(c == '+' || c == '-') { // Increment/Decrement unary operation
+				char next = mSourceStream->get();
+				if(c == '+' && next == '+') {
+					lexerToken.value = "++";
+					lexerToken.type = INCREMENT;
+					// Eat next +
+					c = mSourceStream->get();
+					return lexerToken;
+				} else if( c == '-' && next == '-') {
+					lexerToken.value = "--";
+					lexerToken.type = DECREMENT;
+					// Eat next -
+					c = mSourceStream->get();
+					return lexerToken;
+				} else {
+					mSourceStream->putback(next);
+				}
+				
+			}
+			lexerToken.value = c;
 			while(isspace(c = mSourceStream->get()));
 			lexerToken.type = BINARY_OP;
 		}

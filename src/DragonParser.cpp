@@ -81,6 +81,9 @@ void Parser::parse()
 			case KEYWORD:
 				expr = handleKeyword(currentToken.value);
 				break;
+			case INCREMENT:
+				expr = new IncrementExpression(mLexer->getToken().value, PRE);
+				break;
 			default:
 				break;
 		}
@@ -240,6 +243,9 @@ BaseExpression* Parser::handleIdentifier(const LexerToken& identifier)
 				expr = new UseVariableExpression(identifier.value);
 			}
 			break;
+		case INCREMENT:
+			expr = new IncrementExpression(identifier.value, POST);
+			break;
 		default:
 			printf("Unexpected '%s' after '%s', expected ';', '=' or '('", nextToken.value.c_str(), identifier.value.c_str());exit(0);
 			break;
@@ -304,7 +310,7 @@ BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, int precedence)
 		int opPrecedence = mOperatorPrecedence[mCurrentToken.value];
 		
 		
-		if (opPrecedence < precedence || mCurrentToken.type == EXPRESSION_END)
+		if (opPrecedence < precedence || mCurrentToken.type == EXPRESSION_END || mCurrentToken.value == ")")
 			return lhs;
 		else if(mCurrentToken.type != BINARY_OP)
 		{
@@ -314,7 +320,6 @@ BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, int precedence)
 		currentToken = mCurrentToken;
 		
 		BaseExpression *rhs = handleOperand();
-		mCurrentToken = mLexer->getToken();
 		int nextOp =  mOperatorPrecedence[mCurrentToken.value];
 		
 		if (opPrecedence < nextOp)
@@ -342,33 +347,53 @@ BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, int precedence)
 
 BaseExpression* Parser::handleOperand() 
 {
-	
+	TokenType type;
+	string identifier;
 	mCurrentToken = mLexer->getToken();
 	BaseExpression *expr = NULL;
-	
+	bool lookahead = false;
 	switch(mCurrentToken.type) {
 		case CONST_NUMBER:
 			expr = new IntegerValueExpression(atoi(mCurrentToken.value.c_str()));
 			break;
 		case IDENTIFIER:
-			expr = new UseVariableExpression(mCurrentToken.value);
+			identifier = mCurrentToken.value;
+			expr = new UseVariableExpression(identifier);
+			mCurrentToken = mLexer->getToken();
+			lookahead = true;
+			if(mCurrentToken.type == INCREMENT) 
+			{
+				delete expr;
+				lookahead = false;
+				expr = new  IncrementExpression(identifier, POST);
+			}
 			break;
 		case BRACE:
 			if(mCurrentToken.value == "(") {
 				expr = handleOperand();
-				mCurrentToken = mLexer->getToken();
 				expr = handleBinaryOp(expr);
-				if(mCurrentToken.value != ")") {
-					printf("Expected end of expression");
-					exit(1);
-				}
 				break;
 			}
+			break;
+		case INCREMENT:
+			mCurrentToken = mLexer->getToken();
+			if(mCurrentToken.type == Dragonc::IDENTIFIER)
+				expr = new IncrementExpression(mCurrentToken.value, PRE);
+			else 
+			{
+				printf("Expected identifier for ++");exit(1);
+			}
+			break;
+		case DECREMENT:
+			printf("GOT DECREMENT");
+			expr = handleOperand();
+			break;
 		default:
 			printf("expected identifier or constant, got %s", mCurrentToken.value.c_str());exit(1);
 			break;
 	}
-	
+	if(!lookahead)
+		mCurrentToken = mLexer->getToken();
 	return expr;
 }
 

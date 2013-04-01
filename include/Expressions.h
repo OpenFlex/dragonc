@@ -9,6 +9,7 @@
 #include <string>
 
 #include "DragonTypes.h"
+#include "DragonLexer.h"
 
 using namespace llvm;
 using namespace std;
@@ -16,7 +17,12 @@ using namespace std;
 namespace Dragonc
 {
 
-
+enum ExecutionOrder
+{
+	PRE,
+	POST
+};
+	
 class BaseExpression
 {
 public:
@@ -127,6 +133,7 @@ private:
 
 
 
+
 class UseVariableExpression : public BaseExpression
 {
 public:
@@ -136,6 +143,20 @@ public:
 private:
 	string mName;
 	Value* mValue;
+};
+
+
+class IncrementExpression : public BaseExpression
+{
+public:
+	IncrementExpression(string identifierName, ExecutionOrder order)
+	:BaseExpression(), mIdentifier(identifierName), mOrder(order) {}
+	
+	virtual Value *emitCode(IRBuilder<> &builder, Module &module);
+private:
+	string mIdentifier;
+	string mName;
+	ExecutionOrder mOrder;
 };
 
 
