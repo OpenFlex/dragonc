@@ -65,19 +65,27 @@ Value *IntegerValueExpression::emitCode(IRBuilder<>& builder, Module &module)
 Value* UseVariableExpression::emitCode(IRBuilder< true >& builder, Module &module)
 {
 	BaseExpression* e = _SymbolTable[mName];
-	return e->getValue();
+	if(mUseValue) 
+		return e->getValue();
+	else 
+		return e->emitCode(builder, module);
 }
 
 Value* UseVariableExpression::getValue()
 {
-	return _SymbolTable[mName]->getValue();
+		return _SymbolTable[mName]->getValue();
 }
 
-Value *IncrementExpression::emitCode(IRBuilder< true >& builder, Module &module)
+Value *IncrementDecrementExpression::emitCode(IRBuilder< true >& builder, Module &module)
 {
 	
 	Value *identifier = _SymbolTable[mIdentifier]->emitCode(builder, module);
-	Value *oldValue = builder.CreateAtomicRMW(AtomicRMWInst::Add, identifier, ConstantInt::get(getGlobalContext(), APInt(32, 1)), llvm::NotAtomic);
+	Value *oldValue;
+	if(mType == INCREMENT)
+		oldValue = builder.CreateAtomicRMW(AtomicRMWInst::Add, identifier, ConstantInt::get(getGlobalContext(), APInt(32, 1)), llvm::NotAtomic);
+	else 
+		oldValue = builder.CreateAtomicRMW(AtomicRMWInst::Sub, identifier, ConstantInt::get(getGlobalContext(), APInt(32, 1)), llvm::NotAtomic);
+	
 	Value *newValue = _SymbolTable[mIdentifier]->getValue();
 	if(mOrder == PRE)
 		return newValue;

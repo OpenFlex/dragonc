@@ -22,6 +22,7 @@ enum ExecutionOrder
 	PRE,
 	POST
 };
+
 	
 class BaseExpression
 {
@@ -137,26 +138,28 @@ private:
 class UseVariableExpression : public BaseExpression
 {
 public:
-	UseVariableExpression(string name):BaseExpression(), mName(name) {}
+	UseVariableExpression(string name, bool useValue = true):BaseExpression(), mName(name), mUseValue(useValue) {}
 	virtual Value *emitCode(IRBuilder< true >& builder, Module &module);
 	virtual Value* getValue();
 private:
 	string mName;
+	bool mUseValue;
 	Value* mValue;
 };
 
 
-class IncrementExpression : public BaseExpression
+class IncrementDecrementExpression : public BaseExpression
 {
 public:
-	IncrementExpression(string identifierName, ExecutionOrder order)
-	:BaseExpression(), mIdentifier(identifierName), mOrder(order) {}
+	IncrementDecrementExpression(string identifierName, ExecutionOrder order, TokenType type)
+	:BaseExpression(), mIdentifier(identifierName), mOrder(order), mType(type) {}
 	
 	virtual Value *emitCode(IRBuilder<> &builder, Module &module);
 private:
 	string mIdentifier;
 	string mName;
 	ExecutionOrder mOrder;
+	TokenType mType;
 };
 
 
