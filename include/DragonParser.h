@@ -41,25 +41,27 @@ private:
 	BaseExpression* handleDeclaration(DragonType type, string value);
 	BaseExpression* handleIdentifier(const LexerToken& currentToken);
 	BaseExpression* handleAssignment();
-	BaseExpression* handleBinaryOp(BaseExpression *lhs, string symbol);
+	BaseExpression* handleBinaryOp(BaseExpression *lhs, int precedence = 0);
 	BaseExpression* handleFunctionDeclaration(DragonType type, string name);
+	BaseExpression* handleOperand();
 
 private:
 	Lexer *mLexer;
 	vector<BaseExpression*> mExprList;
 	map<std::string, BaseExpression*> mSymbolTable;
+	map<std::string, int> mOperatorPrecedence;
 
 	/* State */
 	ParserContext mCurrentContext;
 	DragonType mCurrentType;
-	LexerToken mCurrentIdentifier;
+	LexerToken mCurrentToken;
 
 	void clearState()
 	{
 		mCurrentContext = GLOBAL;
 		mCurrentType = TYPE_NONE;
-		mCurrentIdentifier.type = INVALID;
-		mCurrentIdentifier.value = "";
+		mCurrentToken.type = INVALID;
+		mCurrentToken.value = "";
 	}
 
 };
