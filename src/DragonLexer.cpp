@@ -2,6 +2,7 @@
 #include <llvm/ADT/StringSwitch.h>
 
 #include <stdio.h>
+#include <fstream>
 
 using namespace llvm;
 using namespace std;
@@ -36,7 +37,7 @@ LexerToken Lexer::getToken()
 	/* Values and types*/
 	if(isalpha(c)) {		
 		lexerToken.value += c;
-		while(isalnum(c = mSourceStream->get())) {
+		while(isalnum(c = mSourceStream->get()) || c == '_') {
 			lexerToken.value += c;
 		}
 
@@ -77,6 +78,24 @@ LexerToken Lexer::getToken()
 		}
 		/* End expression symbols */
 		else if(c == '+' || c == '-' || c == '*' || c == '/' || c == '=') {
+
+			// Single line comments
+			if(c == '/')
+			{
+				c = mSourceStream->get();
+				if(c == '/')
+				{
+					while(c != '\n' && c != '\r'){
+						c = mSourceStream->get();
+					}
+				}
+				else
+				{
+					mSourceStream->putback(c);
+					c = '/';
+				}
+			}
+			
 			lexerToken.value= c;
 			while(isspace(c = mSourceStream->get()));
 			lexerToken.type = BINARY_OP;
