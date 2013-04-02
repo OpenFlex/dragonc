@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
 		print_usage(argv[0]);
 		return EXIT_FAILURE;
 	}
+	
 	llvm::LLVMContext &context = llvm::getGlobalContext();
 	llvm::Module *module = new llvm::Module("asdf", context);
 	llvm::IRBuilder<> builder(context);
