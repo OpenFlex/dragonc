@@ -82,7 +82,8 @@ void Parser::parse()
 				expr = handleKeyword(currentToken.value);
 				break;
 			case INCREMENT:
-				expr = new IncrementExpression(mLexer->getToken().value, PRE);
+			case DECREMENT:
+				expr = new IncrementDecrementExpression(mLexer->getToken().value, PRE, currentToken.type);
 				break;
 			default:
 				break;
@@ -236,7 +237,7 @@ BaseExpression* Parser::handleIdentifier(const LexerToken& identifier)
 			expr = new UseVariableExpression(identifier.value);
 			break;
 		case BINARY_OP:
-			expr = handleBinaryOp(new UseVariableExpression(identifier.value));
+			expr = handleBinaryOp(new UseVariableExpression(identifier.value, false));
 			break;
 		case BRACE:
 			if(nextToken.value == ")") {
@@ -244,7 +245,8 @@ BaseExpression* Parser::handleIdentifier(const LexerToken& identifier)
 			}
 			break;
 		case INCREMENT:
-			expr = new IncrementExpression(identifier.value, POST);
+		case DECREMENT:	
+			expr = new IncrementDecrementExpression(identifier.value, POST, nextToken.type);
 			break;
 		default:
 			printf("Unexpected '%s' after '%s', expected ';', '=' or '('", nextToken.value.c_str(), identifier.value.c_str());exit(0);
@@ -361,11 +363,11 @@ BaseExpression* Parser::handleOperand()
 			expr = new UseVariableExpression(identifier);
 			mCurrentToken = mLexer->getToken();
 			lookahead = true;
-			if(mCurrentToken.type == INCREMENT) 
+			if(mCurrentToken.type == INCREMENT || mCurrentToken.type == DECREMENT) 
 			{
 				delete expr;
 				lookahead = false;
-				expr = new  IncrementExpression(identifier, POST);
+				expr = new  IncrementDecrementExpression(identifier, POST, mCurrentToken.type);
 			}
 			break;
 		case BRACE:
@@ -376,17 +378,15 @@ BaseExpression* Parser::handleOperand()
 			}
 			break;
 		case INCREMENT:
+		case DECREMENT:
+			type = mCurrentToken.type;
 			mCurrentToken = mLexer->getToken();
 			if(mCurrentToken.type == Dragonc::IDENTIFIER)
-				expr = new IncrementExpression(mCurrentToken.value, PRE);
+				expr = new IncrementDecrementExpression(mCurrentToken.value, PRE, type);
 			else 
 			{
 				printf("Expected identifier for ++");exit(1);
 			}
-			break;
-		case DECREMENT:
-			printf("GOT DECREMENT");
-			expr = handleOperand();
 			break;
 		default:
 			printf("expected identifier or constant, got %s", mCurrentToken.value.c_str());exit(1);
