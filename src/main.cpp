@@ -46,13 +46,13 @@ int main(int argc, char *argv[]) {
 
 	llvm::InitializeNativeTarget();
 	
-	if (argc < 2) {
+	if (argc != 2) {
 		print_usage(argv[0]);
 		return EXIT_FAILURE;
 	}
 	
 	llvm::LLVMContext &context = llvm::getGlobalContext();
-	llvm::Module *module = new llvm::Module("asdf", context);
+	llvm::Module *module = new llvm::Module(argv[1], context);
 	llvm::IRBuilder<> builder(context);
 
 	llvm::Function *printf_func = printf_prototype(context, module);
