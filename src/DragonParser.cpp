@@ -1,4 +1,5 @@
 #include "DragonParser.h"
+#include "DragonContext.h"
 #include "Expressions.h"
 
 #include <llvm/ADT/StringSwitch.h>
@@ -34,11 +35,12 @@ Parser::~Parser()
 
 BaseExpression* Parser::getIdent(string name)
 {
-	return new VariableExpression(mSymbolTable[name]);
+	return new UseVariableExpression(name);
 }
 
 void Parser::emitCode(IRBuilder<> &builder, Module &module)
 {
+    DragonContext::clear();
 	int size = mExprList.size();
 	
 	for (int i = 0; i < size; i++) {
@@ -117,22 +119,16 @@ BaseExpression* Parser::handleDeclaration(DragonType type, string name)
 	switch (nextToken.type) {
 		case EXPRESSION_END:
 			expr = new IdentifierDeclaration(name);
-			mSymbolTable[name] = expr;
-			expr = new AssignmentExpression(expr, new IntegerValueExpr(0));
+			expr = new AssignmentExpression(expr, new IntegerValueExpression(0));
 			break;
 		case BINARY_OP:
 			expr = new IdentifierDeclaration(name);
-			mSymbolTable[name] = expr;
 			expr = handleBinaryOp(expr);
 			break;
 		case BRACE:
-			if(nextToken.value[0] == '(')
-			{
+			if(nextToken.value[0] == '('){
 				expr = handleFunctionDeclaration(type, name);
-				mSymbolTable[name] = expr;
-			}
-			else
-			{
+			} else {
 				printf("Unexpected '%s' after '%s', expected '('", nextToken.value.c_str(), name.c_str());exit(0);
 			}
 			break;
@@ -144,43 +140,39 @@ BaseExpression* Parser::handleDeclaration(DragonType type, string name)
 	return expr;
 }
 
-VariableList args;
 BaseExpression* Parser::handleFunctionDeclaration(DragonType type, string name)
 {
-    LexerToken nextToken;
-//    DragonVariable argument = {TYPE_NONE, ""};
+	VariableList args;
+	LexerToken nextToken;
+	DragonVariable argument = {TYPE_NONE, ""};
 
-    while(nextToken.value[0] != ')')
-    {
-        nextToken = mLexer->getToken();
-//        switch (nextToken.type)
-//        {
-//        case TYPE:
-//            argument.type = toDragonType(nextToken.value);
-//            break;
-//        case IDENTIFIER:
-//            if(argument.type != TYPE_NONE)
-//            {
-//                argument.name = nextToken.value;
-////                args.push_back(argument);
-//                argument.type = TYPE_NONE;
-//            }
-//            else
-//            {
-//                printf("No type specified '%s' in argument list for function '%s'", argument.name.c_str(), name.c_str());exit(0);
-//            }
-//            break;
-//        case BRACE:
-//        case SPECIAL_SYMBOL:
-//            break;
-//        default:
-//            printf("Unexpected '%s' in argument list for function '%s',"
-//                               " expected ','", nextToken.value.c_str(), name.c_str());exit(0);
-//            break;
-//        }
-    }
+	while(nextToken.value[0] != ')') {
+		nextToken = mLexer->getToken();
 
-    return new FunctionDeclExpr(type, name, args);
+		switch (nextToken.type) {
+		case TYPE:
+			argument.type = toDragonType(nextToken.value);
+			break;
+		case IDENTIFIER:
+			if(argument.type != TYPE_NONE) {
+				argument.name = nextToken.value;
+				args.push_back(argument);
+				argument.type = TYPE_NONE;
+			} else {
+				printf("No type specified '%s' in argument list for function '%s'", argument.name.c_str(), name.c_str());exit(0);
+			}
+			break;
+		case BRACE:
+		case SPECIAL_SYMBOL:
+			break;
+		default:
+			printf("Unexpected '%s' in argument list for function '%s',"
+				 " expected ','", nextToken.value.c_str(), name.c_str());exit(0);
+			break;
+		}
+	}
+
+	return new FunctionDeclExpr(type, name, args);
 }
 
 BaseExpression* Parser::handleKeyword(string keyword)
@@ -191,8 +183,7 @@ BaseExpression* Parser::handleKeyword(string keyword)
 	.Case("return", 10);
 	BaseExpression *expr;
 	LexerToken token;
-	switch(type)
-	{
+	switch(type) {
 		case 0:
 			token = mLexer->getToken();
 			if(token.value == "(") {
@@ -203,7 +194,6 @@ BaseExpression* Parser::handleKeyword(string keyword)
 			if(token.value != ";") {
 				throw "Expected )";
 			}
-			
 			break;
 		default:
 			break;
@@ -240,14 +230,14 @@ BaseExpression* Parser::handleIdentifier(const LexerToken& identifier)
 	mCurrentToken = nextToken;
 	switch (nextToken.type) {
 		case EXPRESSION_END:
-			expr = new VariableExpression(mSymbolTable[identifier.value]);
+			expr = new UseVariableExpression(identifier.value);
 			break;
 		case BINARY_OP:
-			expr = handleBinaryOp(new VariableExpression(mSymbolTable[identifier.value]));
+			expr = handleBinaryOp(new UseVariableExpression(identifier.value));
 			break;
 		case BRACE:
 			if(nextToken.value == ")") {
-				expr = new VariableExpression(mSymbolTable[identifier.value]);
+				expr = new UseVariableExpression(identifier.value);
 			}
 			break;
 		default:
@@ -351,10 +341,10 @@ BaseExpression* Parser::handleOperand()
 	
 	switch(currentToken.type) {
 		case CONST_NUMBER:
-			expr = new IntegerValueExpr(atoi(currentToken.value.c_str()));
+			expr = new IntegerValueExpression(atoi(currentToken.value.c_str()));
 			break;
 		case IDENTIFIER:
-			expr = new VariableExpression(mSymbolTable[currentToken.value]);
+			expr = new UseVariableExpression(currentToken.value);
 			break;
 		case BRACE:
 			expr = handleOperand();

@@ -1,9 +1,13 @@
 #include "Expressions.h"
 
+#include "DragonContext.h"
+#include "DragonSymbolTable.h"
 #include <iostream>
 
 namespace Dragonc
 {
+
+SymbolTable _SymbolTable;
 
 Value * AddExpression::emitCode(IRBuilder< true >& builder, Module &module)
 {
@@ -33,55 +37,100 @@ Value * DivideExpression::emitCode(IRBuilder< true >& builder, Module &module)
 
 Value * AssignmentExpression::emitCode(IRBuilder< true >& builder, Module &module)
 {
-	return builder.CreateStore(mRhs->emitCode(builder, module), mLhs->emitCode(builder, module));
+	Value* rVal = mLhs->emitCode(builder, module);
+	Value* lVal = mRhs->emitCode(builder, module);
+	return builder.CreateStore(lVal, rVal);
 }
 
 
 Value* IdentifierDeclaration::emitCode(IRBuilder<> &builder, Module &module)
 {
 	if(!mValue)
+	{
+		mBuilder = &builder;
 		mValue = builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, mName);
+
+		_SymbolTable.addSymbol(mName, this);
+	}
 	return mValue;
 }
 
 
-Value *IntegerValueExpr::emitCode(IRBuilder<>& builder, Module &module)
+Value *IntegerValueExpression::emitCode(IRBuilder<>& builder, Module &module)
 {
 	return ConstantInt::get(getGlobalContext(), APInt(32, mValue));
 }
 
 
-Value* VariableExpression::emitCode(IRBuilder< true >& builder, Module &module)
+Value* UseVariableExpression::emitCode(IRBuilder< true >& builder, Module &module)
 {
-	return builder.CreateLoad(mIdent->getValue());
+	BaseExpression* e = _SymbolTable[mName];
+	return e->getValue();
 }
 
-
-FunctionDeclExpr::FunctionDeclExpr(DragonType returnType, string name, VariableList &variableList):BaseExpression()
+Value* UseVariableExpression::getValue()
 {
-    mName = name;
-    mReturnType = returnType;
-//    mVariableList = variableList;
+	return _SymbolTable[mName]->getValue();
+}
+
+Value* FuncArgumentExpression::emitCode(IRBuilder< true >& builder, Module &module)
+{
+	return mArg;
 }
 
 Value *FunctionDeclExpr::emitCode(IRBuilder<>& builder, Module &module)
 {
-	bool isMain = (mName == "main");
+	if(DragonContext::get() != GLOBAL)
+	{
+		std::cout << "Function '" << mName << "'' can not be declared here";
+		return 0;
+	}
+
 	Type* returnType = toLlvmType(builder, mReturnType);
 
 	if(!returnType)
 	{
 		throw "Invalid return type for function " + mName;
 	}
-	
+
 	llvm::FunctionType *funcType = 0;
-	funcType = llvm::FunctionType::get(returnType, false);
-	
+
+	// Function has arguments?
+	if(mArgList.size())
+	{
+		// Get function type having the following arguments
+		std::vector<Type*> argList;
+		for(VariableIterator it = mArgList.begin(); it != mArgList.end(); it++)
+		{
+			argList.push_back(toLlvmType(builder, it->type));
+		}
+		funcType = llvm::FunctionType::get(returnType, argList, false);
+	}
+	// Function taking no arguments
+	else
+	{
+		funcType = llvm::FunctionType::get(returnType, false);
+	}
+
 	llvm::Function *funcPtr = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mName, &module);
+
+	// Give the arguments names
+	if(mArgList.size())
+	{
+		unsigned i = 0;
+		for (Function::arg_iterator AI = funcPtr->arg_begin(); i != mArgList.size(); ++AI, ++i)
+		{
+			AI->setName(mArgList[i].name);
+			_SymbolTable.addSymbol(mArgList[i].name, new FuncArgumentExpression(AI));
+		}
+	}
+
 	llvm::BasicBlock *entry = llvm::BasicBlock::Create(module.getContext(), "entrypoint", funcPtr);
 	builder.SetInsertPoint(entry);
-	
-	return entry;
+
+	_SymbolTable.addSymbol(mName, this);
+
+	return funcPtr;
 }
 
 Value *PrintfInvocation::emitCode(IRBuilder< true >& builder, Module &module)

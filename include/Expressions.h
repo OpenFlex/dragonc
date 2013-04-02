@@ -115,21 +115,35 @@ class IdentifierDeclaration : public BaseExpression
 {
 public:
 	IdentifierDeclaration(string& name)
-	:BaseExpression(), mName(name), mValue(0) {};
+		:BaseExpression(), mName(name), mValue(0), mBuilder(0) {}
 
 	virtual Value *emitCode(IRBuilder<> &builder, Module &module);
-	virtual Value *getValue() { return mValue; };
+	virtual Value *getValue() { return mBuilder->CreateLoad(mValue); }
 private:
 	string mName;
 	Value *mValue;
+	IRBuilder<> *mBuilder;
 };
 
 
 
-class IntegerValueExpr : public BaseExpression
+class UseVariableExpression : public BaseExpression
 {
 public:
-	IntegerValueExpr(int value) : BaseExpression(), mValue(value) {} ;
+	UseVariableExpression(string name):BaseExpression(), mName(name) {}
+	virtual Value *emitCode(IRBuilder< true >& builder, Module &module);
+	virtual Value* getValue();
+private:
+	string mName;
+	Value* mValue;
+};
+
+
+
+class IntegerValueExpression : public BaseExpression
+{
+public:
+	IntegerValueExpression(int value) : BaseExpression(), mValue(value) {} ;
 
 	virtual Value *emitCode(IRBuilder<>& builder, Module &module);
 
@@ -142,29 +156,34 @@ private:
 class FunctionDeclExpr : public BaseExpression
 {
 public:
-    FunctionDeclExpr(DragonType returnType, string name, VariableList& variableList);
-    virtual ~FunctionDeclExpr(){}
+	FunctionDeclExpr(DragonType returnType, string name, VariableList& argList):BaseExpression()
+	{
+		mName = name;
+		mReturnType = returnType;
+		mArgList = argList;
+	}
 
 	virtual Value *emitCode(IRBuilder<>& builder, Module &module);
 
 private:
-	
 	string mName;
-    DragonType mReturnType;
-//    VariableList* mVariableList;
+	DragonType mReturnType;
+	VariableList mArgList;
 };
 
 
 
-class VariableExpression : public BaseExpression
+class FuncArgumentExpression : public BaseExpression
 {
 public:
-	VariableExpression(BaseExpression *identifier):BaseExpression(), mIdent(identifier) {};
+	FuncArgumentExpression(Argument* arg):BaseExpression(), mArg(arg) {}
 	virtual Value *emitCode(IRBuilder< true >& builder, Module &module);
-
+	virtual Value* getValue(){return mArg;}
 private:
-	BaseExpression *mIdent;
+	Argument* mArg;
 };
+
+
 
 class PrintfInvocation : public BaseExpression
 {

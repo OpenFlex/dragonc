@@ -6,10 +6,9 @@
 #include <llvm/Module.h>
 #include <llvm/Instruction.h>
 #include <string>
-#include <list>
+#include <vector>
 
-namespace Dragonc
-{
+namespace Dragonc {
 	
 enum DragonType
 {
@@ -30,23 +29,8 @@ struct DragonVariable
     std::string name;
 };
 
-class VariableList
-{
-public:
-    void push_back(DragonVariable& var)
-    {
-        mStdList.push_back(var);
-    }
-
-    inline int num_args()
-    {
-        return mStdList.size();
-    }
-
-private:
-    std::list<DragonVariable> mStdList;
-};
-
+typedef std::vector<DragonVariable> VariableList;
+typedef std::vector<DragonVariable>::iterator VariableIterator;
 
 } // namespace Dragonc
 

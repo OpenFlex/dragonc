@@ -4,6 +4,7 @@
 #include "DragonLexer.h"
 #include "Expressions.h"
 #include "DragonTypes.h"
+#include "DragonSymbolTable.h"
 
 #include <map>
 #include <vector>
@@ -11,16 +12,6 @@
 using namespace std;
 namespace Dragonc 
 {
-
-enum ParserContext
-{
-	GLOBAL,
-	DECLARATION,
-	EXPRESSION,
-	R_EXPRESSION,
-	FUNCTION_PARAMETERS_BLOCK,
-	FUNCTION_BODY,
-};
 
 class Parser
 {
@@ -48,21 +39,9 @@ private:
 private:
 	Lexer *mLexer;
 	vector<BaseExpression*> mExprList;
-	map<std::string, BaseExpression*> mSymbolTable;
 	map<std::string, int> mOperatorPrecedence;
-
-	/* State */
-	ParserContext mCurrentContext;
-	DragonType mCurrentType;
 	LexerToken mCurrentToken;
 
-	void clearState()
-	{
-		mCurrentContext = GLOBAL;
-		mCurrentType = TYPE_NONE;
-		mCurrentToken.type = INVALID;
-		mCurrentToken.value = "";
-	}
 
 };
 
