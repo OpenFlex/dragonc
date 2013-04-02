@@ -41,8 +41,6 @@ private:
 	vector<BaseExpression*> mExprList;
 	map<std::string, int> mOperatorPrecedence;
 	LexerToken mCurrentToken;
-
-
 };
 
 }

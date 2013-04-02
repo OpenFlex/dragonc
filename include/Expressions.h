@@ -178,8 +178,6 @@ private:
 };
 
 
-
-
 class UseVariableExpression : public BaseExpression
 {
 public:
@@ -233,13 +231,11 @@ public:
 	}
 
 	virtual Value *emitCode(IRBuilder<>& builder, Module &module);
-
 private:
 	string mName;
 	DragonType mReturnType;
 	VariableList mArgList;
 };
-
 
 
 class FuncArgumentExpression : public BaseExpression
