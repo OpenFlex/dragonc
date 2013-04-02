@@ -56,11 +56,29 @@ Value* VariableExpression::emitCode(IRBuilder< true >& builder, Module &module)
 	return builder.CreateLoad(mIdent->getValue());
 }
 
-Value *FuctionDeclExpr::emitCode(IRBuilder<>& builder, Module &module)
+
+FunctionDeclExpr::FunctionDeclExpr(DragonType returnType, string name, VariableList &variableList):BaseExpression()
 {
-	llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
-	llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mName, &module);
-	llvm::BasicBlock *entry = llvm::BasicBlock::Create(module.getContext(), "entrypoint", mainFunc);
+    mName = name;
+    mReturnType = returnType;
+//    mVariableList = variableList;
+}
+
+Value *FunctionDeclExpr::emitCode(IRBuilder<>& builder, Module &module)
+{
+	bool isMain = (mName == "main");
+	Type* returnType = toLlvmType(builder, mReturnType);
+
+	if(!returnType)
+	{
+		throw "Invalid return type for function " + mName;
+	}
+	
+	llvm::FunctionType *funcType = 0;
+	funcType = llvm::FunctionType::get(returnType, false);
+	
+	llvm::Function *funcPtr = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mName, &module);
+	llvm::BasicBlock *entry = llvm::BasicBlock::Create(module.getContext(), "entrypoint", funcPtr);
 	builder.SetInsertPoint(entry);
 	
 	return entry;
