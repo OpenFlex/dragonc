@@ -73,6 +73,17 @@ Value* UseVariableExpression::getValue()
 	return _SymbolTable[mName]->getValue();
 }
 
+Value *IncrementExpression::emitCode(IRBuilder< true >& builder, Module &module)
+{
+	
+	Value *identifier = _SymbolTable[mIdentifier]->emitCode(builder, module);
+	Value *oldValue = builder.CreateAtomicRMW(AtomicRMWInst::Add, identifier, ConstantInt::get(getGlobalContext(), APInt(32, 1)), llvm::NotAtomic);
+	Value *newValue = _SymbolTable[mIdentifier]->getValue();
+	if(mOrder == PRE)
+		return newValue;
+	return oldValue;
+}
+
 Value* FuncArgumentExpression::emitCode(IRBuilder< true >& builder, Module &module)
 {
 	return mArg;

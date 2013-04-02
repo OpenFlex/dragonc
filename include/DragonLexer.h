@@ -24,6 +24,8 @@ enum TokenType
 	TOKEN_EOF = 'e',
 	FUNCTION_DECL = 'f',
 	SPECIAL_SYMBOL = 's',
+	INCREMENT = 'u',
+	DECREMENT = 'd'
 };
 
 
