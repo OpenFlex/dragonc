@@ -77,7 +77,7 @@ LexerToken Lexer::getToken()
 			lexerToken.type = EXPRESSION_END;
 		}
 		/* End expression symbols */
-		else if(c == '+' || c == '-' || c == '*' || c == '/' || c == '=') {
+		else if(c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '%' || c == '|' || c == '&') {
 
 			// Single line comments
 			if(c == '/') 

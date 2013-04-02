@@ -98,6 +98,51 @@ private:
 };
 
 
+class ReminderExpression : public BaseExpression
+{
+public:
+	ReminderExpression(BaseExpression *lhs, BaseExpression *rhs)
+	:BaseExpression(), mLhs(lhs), mRhs(rhs) {};
+	virtual ~ReminderExpression() { delete mLhs;delete mRhs;}
+	
+	virtual Value *emitCode(IRBuilder< true >& builder, Module &module);
+	
+private:
+	BaseExpression *mLhs, *mRhs;
+	
+};
+
+
+class BitwiseOrExpression : public BaseExpression
+{
+public:
+	BitwiseOrExpression(BaseExpression *lhs, BaseExpression *rhs)
+	:BaseExpression(), mLhs(lhs), mRhs(rhs) {};
+	virtual ~BitwiseOrExpression() { delete mLhs;delete mRhs;}
+	
+	virtual Value *emitCode(IRBuilder< true >& builder, Module &module);
+	
+private:
+	BaseExpression *mLhs, *mRhs;
+	
+};
+
+class BitwiseAndExpression : public BaseExpression
+{
+public:
+	BitwiseAndExpression(BaseExpression *lhs, BaseExpression *rhs)
+	:BaseExpression(), mLhs(lhs), mRhs(rhs) {};
+	virtual ~BitwiseAndExpression() { delete mLhs;delete mRhs;}
+	
+	virtual Value *emitCode(IRBuilder< true >& builder, Module &module);
+	
+private:
+	BaseExpression *mLhs, *mRhs;
+	
+};
+
+
+
 
 class AssignmentExpression : public BaseExpression
 {

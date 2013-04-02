@@ -34,6 +34,21 @@ Value * DivideExpression::emitCode(IRBuilder< true >& builder, Module &module)
 	return builder.CreateCast(Instruction::FPToUI, builder.CreateFDiv(lexpr, rexpr), builder.getInt32Ty());
 }
 
+Value * ReminderExpression::emitCode(IRBuilder< true >& builder, Module &module)
+{
+	return builder.CreateSRem(mLhs->emitCode(builder, module), mRhs->emitCode(builder, module));
+}
+
+Value * BitwiseAndExpression::emitCode(IRBuilder< true >& builder, Module &module)
+{
+	return builder.CreateAnd(mLhs->emitCode(builder, module), mRhs->emitCode(builder, module));
+}
+
+Value * BitwiseOrExpression::emitCode(IRBuilder< true >& builder, Module &module)
+{
+	return builder.CreateOr(mLhs->emitCode(builder, module), mRhs->emitCode(builder, module));
+}
+
 
 Value * AssignmentExpression::emitCode(IRBuilder< true >& builder, Module &module)
 {

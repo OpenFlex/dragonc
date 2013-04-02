@@ -18,10 +18,13 @@ Parser::Parser(Lexer *dragonLexer)
 {
 	mLexer = dragonLexer;
 	mOperatorPrecedence["="] = 0;
-	mOperatorPrecedence["+"] = 1;
-	mOperatorPrecedence["-"] = 1;
-	mOperatorPrecedence["*"] = 2;
-	mOperatorPrecedence["/"] = 2;
+	mOperatorPrecedence["|"] = 1;
+	mOperatorPrecedence["&"] = 2;
+	mOperatorPrecedence["+"] = 3;
+	mOperatorPrecedence["-"] = 3;
+	mOperatorPrecedence["*"] = 4;
+	mOperatorPrecedence["/"] = 4;
+	mOperatorPrecedence["%"] = 4;
 }
 
 Parser::~Parser()
@@ -337,6 +340,12 @@ BaseExpression* Parser::handleBinaryOp(BaseExpression *lhs, int precedence)
 			lhs = new MultiplyExpression(lhs, rhs);
 		} else if (currentToken.value == "/") {
 			lhs = new DivideExpression(lhs, rhs);
+		} else if(currentToken.value == "%") {
+			return new ReminderExpression(lhs, rhs);
+		} else if(currentToken.value == "|") {
+			return new BitwiseOrExpression(lhs, rhs);
+		} else if(currentToken.value == "&") {
+			return new BitwiseAndExpression(lhs, rhs);
 		} else {
 			throw "unhandled sitation";
 		}
